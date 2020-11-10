@@ -1,10 +1,12 @@
-package MyGoRaft
+package main
 
 import (
 	"MyGoRaft/NodeRPC"
 	"context"
+	"fmt"
 	"google.golang.org/grpc"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -16,9 +18,9 @@ type NodeInfo struct {
 
 type Node struct {
 	info              *NodeInfo
+	id                string
 	vote              int
 	lock              sync.Mutex
-	id                string
 	term              int
 	votedFor          string
 	leader            string
@@ -27,13 +29,17 @@ type Node struct {
 	nextHeartBeatTime int64
 	heartBeatTimeout  int
 	voteResult        chan bool
-	heartBeat         chan bool
+	heartBeatStart    chan bool
 }
 
 func initNode(id, port string) *Node {
+	info := &NodeInfo{
+		id:   id,
+		port: port,
+	}
 	n := new(Node)
-	n.info.id = id
-	n.info.port = port
+	n.info = info
+	n.id = id
 	n.setVote(0)
 	n.setVotedFor("-1")
 	n.setRole(0)
@@ -43,19 +49,34 @@ func initNode(id, port string) *Node {
 	n.nextHeartBeatTime = 0
 	n.heartBeatTimeout = heartBeatTimeout
 	n.voteResult = make(chan bool)
+	n.heartBeatStart = make(chan bool)
 	return n
+}
+
+func (n *Node) election() {
+	for {
+		if n.becomeCandidate() {
+			if n.becomeLeader() {
+				return
+			} else {
+				continue
+			}
+		} else {
+			return
+		}
+	}
 }
 
 func (n *Node) becomeCandidate() bool {
 	sleepTime := randRange(1500, 5000)
-	time.Sleep(time.Duration(sleepTime) * time.Microsecond)
-	if n.role == 0 && n.votedFor != "-1" && n.leader != "-1" {
+	time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+	if n.role == 0 && n.votedFor == "-1" && n.leader == "-1" {
 		n.setRole(1)
-		n.setVotedFor("-1")
+		n.setVotedFor(n.id)
 		n.setTerm(n.term + 1)
 		n.setLeader("-1")
 		n.encVote()
-		log.Println("超时后无人参选，本节点" + n.id + "变成候选人")
+		log.Println("超时后无人参选，本节点" + n.id + "变成候选人,当前得票数：" + strconv.Itoa(n.vote))
 		return true
 	}
 	return false
@@ -79,6 +100,7 @@ func (n *Node) becomeLeader() bool {
 					log.Panic("远程调用出错啦")
 				}
 				if ret.Result {
+					log.Println("节点" + key + " 给本节点投票")
 					n.encVote()
 				}
 				conn.Close()
@@ -102,34 +124,127 @@ func (n *Node) becomeLeader() bool {
 							log.Panic("远程调用出错啦")
 						}
 						if ret.Result {
-							log.Println("节点" + key + "已确认本节点为领导者")
+							log.Println("节点" + key + "已确认本节点为leader")
 						}
 						conn.Close()
 					}
 				}
+				n.heartBeatStart <- true
 				n.voteResult <- true
-				return
+				break
 			}
 		}
 	}()
 	select {
-	case <-time.After(time.Duration(heartBeatTimeout) * time.Second):
-		log.Println("领导人选举超时，本节点变为Follower状态")
-		n.reDefault()
-		return false
+	//case <-time.After(time.Duration(electionTimeout) * time.Millisecond):
+	//	log.Println("领导人选举超时，本节点变为Follower状态")
+	//	n.reDefault()
+	//	return false
 	case success := <-n.voteResult:
+		fmt.Println(success)
 		if success {
+			log.Println("本节点成功成为leader")
 			return true
 		}
 		return false
 	}
 }
 
+func (n *Node) startHeartbeat() {
+	if <-n.heartBeatStart {
+		// 开始心跳检测
+		for {
+			log.Println("发送心跳检测")
+			for key, port := range nodeList {
+				if key != n.id {
+					conn, err := grpc.Dial("127.0.0.1"+port, grpc.WithInsecure())
+					if err != nil {
+						log.Panic("连接出错啦")
+					}
+					c := NodeRPC.NewRaftNodeClient(conn)
+					req := NodeRPC.IDRequest{
+						ID: n.id,
+					}
+					ret, err := c.ResponseHeartBeat(context.Background(), &req)
+					if err != nil {
+						log.Panic("远程调用出错啦")
+					}
+					if ret.Result {
+						log.Println("节点" + key + "已确认心跳包")
+					}
+					conn.Close()
+				}
+			}
+			n.nextHeartBeatTime = getCurrentTime() + int64(heartBeatTimeout)
+			time.Sleep(time.Millisecond * time.Duration(heartBeatPeriod))
+		}
+	}
+}
+
 //
 // 节点gRPC part
 //
-func (n *Node) Vote(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
 
+func (n *Node) TestConnection(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
+	ret := &NodeRPC.BoolResponse{
+		Result: true,
+	}
+	return ret, nil
+}
+
+func (n *Node) Vote(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
+	if n.votedFor == "-1" && n.leader == "-1" {
+		n.setVotedFor(req.ID)
+		log.Println(n.id + ":已成功投票给节点" + req.ID)
+		ret := &NodeRPC.BoolResponse{
+			Result: true,
+		}
+		return ret, nil
+	} else {
+		ret := &NodeRPC.BoolResponse{
+			Result: false,
+		}
+		return ret, nil
+	}
+}
+
+func (n *Node) ConfirmLeader(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
+	n.reDefault()
+	n.setLeader(req.ID)
+	log.Println("确定节点" + req.ID + "成为leader")
+	ret := &NodeRPC.BoolResponse{
+		Result: true,
+	}
+	return ret, nil
+}
+
+func (n *Node) ResponseHeartBeat(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
+	if req.ID == n.leader {
+		log.Println("接收到来自leader的心跳包")
+		n.nextHeartBeatTime = getCurrentTime() + int64(heartBeatTimeout)
+		ret := &NodeRPC.BoolResponse{
+			Result: true,
+		}
+		return ret, nil
+	}
+	ret := &NodeRPC.BoolResponse{
+		Result: false,
+	}
+	return ret, nil
+}
+
+func (n *Node) ReceiveMessage(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	ret := &NodeRPC.BoolResponse{
+		Result: false,
+	}
+	return ret, nil
+}
+
+func (n *Node) RedirectMessageToLeader(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	ret := &NodeRPC.BoolResponse{
+		Result: false,
+	}
+	return ret, nil
 }
 
 //

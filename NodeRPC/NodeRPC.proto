@@ -23,6 +23,7 @@ service RaftNode {
   rpc Vote (IDRequest) returns (BoolResponse);
   rpc ResponseHeartBeat (IDRequest) returns (BoolResponse);
   rpc ReceiveMessage(MessageRequest) returns (BoolResponse);
-  rpc ConfirmLeader (IDRequest) returns(BoolResponse);
-  rpc RedirectMessageToLeader (MessageRequest) returns(BoolResponse);
+  rpc ConfirmLeader (IDRequest) returns (BoolResponse);
+  rpc RedirectMessageToLeader (MessageRequest) returns (BoolResponse);
+  rpc TestConnection (IDRequest) returns (BoolResponse);
 }

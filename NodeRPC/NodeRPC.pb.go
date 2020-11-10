@@ -190,7 +190,7 @@ var file_NodeRPC_proto_rawDesc = []byte{
 	0x0e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
 	0x10, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x4d, 0x73,
 	0x67, 0x12, 0x14, 0x0a, 0x05, 0x4d, 0x73, 0x67, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x4d, 0x73, 0x67, 0x49, 0x44, 0x32, 0xc6, 0x02, 0x0a, 0x08, 0x52, 0x61, 0x66, 0x74,
+	0x52, 0x05, 0x4d, 0x73, 0x67, 0x49, 0x44, 0x32, 0x83, 0x03, 0x0a, 0x08, 0x52, 0x61, 0x66, 0x74,
 	0x4e, 0x6f, 0x64, 0x65, 0x12, 0x31, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x12, 0x2e, 0x4e,
 	0x6f, 0x64, 0x65, 0x52, 0x50, 0x43, 0x2e, 0x49, 0x44, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x1a, 0x15, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x50, 0x43, 0x2e, 0x42, 0x6f, 0x6f, 0x6c, 0x52,
@@ -211,7 +211,11 @@ var file_NodeRPC_proto_rawDesc = []byte{
 	0x12, 0x17, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x50, 0x43, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61,
 	0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x4e, 0x6f, 0x64, 0x65,
 	0x52, 0x50, 0x43, 0x2e, 0x42, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x3b, 0x0a, 0x0e, 0x54, 0x65, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x12, 0x12, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x50, 0x43, 0x2e, 0x49, 0x44, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x50, 0x43,
+	0x2e, 0x42, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -238,13 +242,15 @@ var file_NodeRPC_proto_depIdxs = []int32{
 	2, // 2: NodeRPC.RaftNode.ReceiveMessage:input_type -> NodeRPC.MessageRequest
 	0, // 3: NodeRPC.RaftNode.ConfirmLeader:input_type -> NodeRPC.IDRequest
 	2, // 4: NodeRPC.RaftNode.RedirectMessageToLeader:input_type -> NodeRPC.MessageRequest
-	1, // 5: NodeRPC.RaftNode.Vote:output_type -> NodeRPC.BoolResponse
-	1, // 6: NodeRPC.RaftNode.ResponseHeartBeat:output_type -> NodeRPC.BoolResponse
-	1, // 7: NodeRPC.RaftNode.ReceiveMessage:output_type -> NodeRPC.BoolResponse
-	1, // 8: NodeRPC.RaftNode.ConfirmLeader:output_type -> NodeRPC.BoolResponse
-	1, // 9: NodeRPC.RaftNode.RedirectMessageToLeader:output_type -> NodeRPC.BoolResponse
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
+	0, // 5: NodeRPC.RaftNode.TestConnection:input_type -> NodeRPC.IDRequest
+	1, // 6: NodeRPC.RaftNode.Vote:output_type -> NodeRPC.BoolResponse
+	1, // 7: NodeRPC.RaftNode.ResponseHeartBeat:output_type -> NodeRPC.BoolResponse
+	1, // 8: NodeRPC.RaftNode.ReceiveMessage:output_type -> NodeRPC.BoolResponse
+	1, // 9: NodeRPC.RaftNode.ConfirmLeader:output_type -> NodeRPC.BoolResponse
+	1, // 10: NodeRPC.RaftNode.RedirectMessageToLeader:output_type -> NodeRPC.BoolResponse
+	1, // 11: NodeRPC.RaftNode.TestConnection:output_type -> NodeRPC.BoolResponse
+	6, // [6:12] is the sub-list for method output_type
+	0, // [0:6] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -331,6 +337,7 @@ type RaftNodeClient interface {
 	ReceiveMessage(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*BoolResponse, error)
 	ConfirmLeader(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*BoolResponse, error)
 	RedirectMessageToLeader(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*BoolResponse, error)
+	TestConnection(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*BoolResponse, error)
 }
 
 type raftNodeClient struct {
@@ -386,6 +393,15 @@ func (c *raftNodeClient) RedirectMessageToLeader(ctx context.Context, in *Messag
 	return out, nil
 }
 
+func (c *raftNodeClient) TestConnection(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*BoolResponse, error) {
+	out := new(BoolResponse)
+	err := c.cc.Invoke(ctx, "/NodeRPC.RaftNode/TestConnection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RaftNodeServer is the server API for RaftNode service.
 type RaftNodeServer interface {
 	// rpc请求 请求的函数 (发送请求参数) returns (返回响应的参数)
@@ -394,6 +410,7 @@ type RaftNodeServer interface {
 	ReceiveMessage(context.Context, *MessageRequest) (*BoolResponse, error)
 	ConfirmLeader(context.Context, *IDRequest) (*BoolResponse, error)
 	RedirectMessageToLeader(context.Context, *MessageRequest) (*BoolResponse, error)
+	TestConnection(context.Context, *IDRequest) (*BoolResponse, error)
 }
 
 // UnimplementedRaftNodeServer can be embedded to have forward compatible implementations.
@@ -414,6 +431,9 @@ func (*UnimplementedRaftNodeServer) ConfirmLeader(context.Context, *IDRequest) (
 }
 func (*UnimplementedRaftNodeServer) RedirectMessageToLeader(context.Context, *MessageRequest) (*BoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RedirectMessageToLeader not implemented")
+}
+func (*UnimplementedRaftNodeServer) TestConnection(context.Context, *IDRequest) (*BoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TestConnection not implemented")
 }
 
 func RegisterRaftNodeServer(s *grpc.Server, srv RaftNodeServer) {
@@ -510,6 +530,24 @@ func _RaftNode_RedirectMessageToLeader_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RaftNode_TestConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RaftNodeServer).TestConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/NodeRPC.RaftNode/TestConnection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RaftNodeServer).TestConnection(ctx, req.(*IDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RaftNode_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "NodeRPC.RaftNode",
 	HandlerType: (*RaftNodeServer)(nil),
@@ -533,6 +571,10 @@ var _RaftNode_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RedirectMessageToLeader",
 			Handler:    _RaftNode_RedirectMessageToLeader_Handler,
+		},
+		{
+			MethodName: "TestConnection",
+			Handler:    _RaftNode_TestConnection_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

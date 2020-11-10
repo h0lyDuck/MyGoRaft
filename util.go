@@ -1,4 +1,4 @@
-package MyGoRaft
+package main
 
 import (
 	"math/rand"
@@ -6,7 +6,6 @@ import (
 )
 
 func randRange(min, max int64) int64 {
-	//用于心跳信号的时间
 	rand.Seed(time.Now().UnixNano())
 	return rand.Int63n(max-min) + min
 }
