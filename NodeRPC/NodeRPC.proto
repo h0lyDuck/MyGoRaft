@@ -1,0 +1,28 @@
+syntax = "proto3";  // 协议为proto3
+
+package NodeRPC;  // 包名
+
+
+message IDRequest{
+  string ID = 1;
+}
+
+message BoolResponse{
+  bool result = 1;
+}
+
+message MessageRequest{
+  string Msg = 1;
+  string MsgID = 2;
+}
+
+
+// 定义服务,可定义多个服务,每个服务可多个接口
+service RaftNode {
+  // rpc请求 请求的函数 (发送请求参数) returns (返回响应的参数)
+  rpc Vote (IDRequest) returns (BoolResponse);
+  rpc ResponseHeartBeat (IDRequest) returns (BoolResponse);
+  rpc ReceiveMessage(MessageRequest) returns (BoolResponse);
+  rpc ConfirmLeader (IDRequest) returns(BoolResponse);
+  rpc RedirectMessageToLeader (MessageRequest) returns(BoolResponse);
+}
