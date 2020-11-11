@@ -13,7 +13,7 @@ import (
 
 var heartBeatTimeout = 3000 // ms
 var electionTimeout = 4000  // ms
-var heartBeatPeriod = 2900  // ms
+var heartBeatPeriod = 3000  // ms
 
 var nodeList map[string]string
 var nodeNum int
