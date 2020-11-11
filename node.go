@@ -313,17 +313,38 @@ func (n *Node) ReceiveMessageFromLeader(ctx context.Context, req *NodeRPC.Messag
 }
 
 func (n *Node) RedirectMessageToLeader(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	message := Message{
+		Msg:   req.Msg,
+		MsgID: req.MsgID,
+	}
+	go n.handleMessageAsLeader(message)
 	ret := &NodeRPC.BoolResponse{
-		Result: false,
+		Result: true,
 	}
 	return ret, nil
 }
 
 func (n *Node) ReceiveMessageFromClient(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
 	if n.leader == n.id {
-
+		message := Message{
+			Msg:   req.Msg,
+			MsgID: req.MsgID,
+		}
+		go n.handleMessageAsLeader(message)
 	} else {
-
+		conn, err := grpc.Dial("127.0.0.1"+nodeList[n.leader], grpc.WithInsecure())
+		if err != nil {
+			log.Panic("连接出错啦")
+		}
+		c := NodeRPC.NewRaftNodeClient(conn)
+		ret, err := c.RedirectMessageToLeader(context.Background(), req)
+		if err != nil {
+			log.Panic("远程调用出错啦")
+		}
+		if ret.Result {
+			log.Println("成功将消息转发至leader节点")
+		}
+		conn.Close()
 	}
 	ret := &NodeRPC.BoolResponse{
 		Result: false,
