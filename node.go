@@ -214,6 +214,8 @@ func (n *Node) handleMessageAsLeader(Msg Message) bool {
 	for {
 		time.Sleep(time.Duration(2) * time.Second)
 		if confirmNum > nodeNum/2-1 {
+			log.Println("收到的消息为：" + MessageStore[Msg.MsgID])
+			log.Println("告知其他节点提交")
 			for key, port := range nodeList {
 				if key != n.id {
 					conn, err := grpc.Dial("127.0.0.1"+port, grpc.WithInsecure())
@@ -235,7 +237,6 @@ func (n *Node) handleMessageAsLeader(Msg Message) bool {
 					conn.Close()
 				}
 			}
-			log.Println()
 			break
 		}
 	}
@@ -279,6 +280,8 @@ func (n *Node) ConfirmLeader(ctx context.Context, req *NodeRPC.IDRequest) (*Node
 }
 
 func (n *Node) ConfirmMessage(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	log.Println("Leader已确认ID为" + req.MsgID + "的消息")
+	log.Println("消息为：" + req.Msg)
 	ret := &NodeRPC.BoolResponse{
 		Result: true,
 	}
