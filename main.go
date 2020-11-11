@@ -18,6 +18,8 @@ var heartBeatPeriod = 2900  // ms
 var nodeList map[string]string
 var nodeNum int
 
+var MessageStore = make(map[string]string)
+
 func main() {
 	nodeList = map[string]string{
 		"n1": ":10001",
@@ -25,7 +27,7 @@ func main() {
 		"n3": ":10003",
 		"n4": ":10004",
 		"n5": ":10005",
-		//"n6": ":10006",
+		"n6": ":10006",
 	}
 	nodeNum = len(nodeList)
 	if len(os.Args) < 2 {

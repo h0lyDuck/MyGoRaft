@@ -3,7 +3,6 @@ package main
 import (
 	"MyGoRaft/NodeRPC"
 	"context"
-	"fmt"
 	"google.golang.org/grpc"
 	"log"
 	"strconv"
@@ -30,6 +29,11 @@ type Node struct {
 	heartBeatTimeout  int
 	voteResult        chan bool
 	heartBeatStart    chan bool
+}
+
+type Message struct {
+	Msg   string
+	MsgID string
 }
 
 func initNode(id, port string) *Node {
@@ -136,12 +140,11 @@ func (n *Node) becomeLeader() bool {
 		}
 	}()
 	select {
-	//case <-time.After(time.Duration(electionTimeout) * time.Millisecond):
-	//	log.Println("领导人选举超时，本节点变为Follower状态")
-	//	n.reDefault()
-	//	return false
+	case <-time.After(time.Duration(electionTimeout) * time.Millisecond):
+		log.Println("领导人选举超时，本节点变为Follower状态")
+		n.reDefault()
+		return false
 	case success := <-n.voteResult:
-		fmt.Println(success)
 		if success {
 			log.Println("本节点成功成为leader")
 			return true
@@ -181,10 +184,67 @@ func (n *Node) startHeartbeat() {
 	}
 }
 
+func (n *Node) handleMessageAsLeader(Msg Message) bool {
+	MessageStore[Msg.MsgID] = Msg.Msg
+	confirmNum := 0
+	go func() {
+		for key, port := range nodeList {
+			if key != n.id {
+				conn, err := grpc.Dial("127.0.0.1"+port, grpc.WithInsecure())
+				if err != nil {
+					log.Panic("连接出错啦")
+				}
+				c := NodeRPC.NewRaftNodeClient(conn)
+				req := NodeRPC.MessageRequest{
+					Msg:   Msg.Msg,
+					MsgID: Msg.MsgID,
+				}
+				ret, err := c.ReceiveMessageFromLeader(context.Background(), &req)
+				if err != nil {
+					log.Panic("远程调用出错啦")
+				}
+				if ret.Result {
+					log.Println("节点" + key + "已收到消息")
+					confirmNum++
+				}
+				conn.Close()
+			}
+		}
+	}()
+	for {
+		time.Sleep(time.Duration(2) * time.Second)
+		if confirmNum > nodeNum/2-1 {
+			for key, port := range nodeList {
+				if key != n.id {
+					conn, err := grpc.Dial("127.0.0.1"+port, grpc.WithInsecure())
+					if err != nil {
+						log.Panic("连接出错啦")
+					}
+					c := NodeRPC.NewRaftNodeClient(conn)
+					req := NodeRPC.MessageRequest{
+						Msg:   Msg.Msg,
+						MsgID: Msg.MsgID,
+					}
+					ret, err := c.ConfirmMessage(context.Background(), &req)
+					if err != nil {
+						log.Panic("远程调用出错啦")
+					}
+					if ret.Result {
+						continue
+					}
+					conn.Close()
+				}
+			}
+			log.Println()
+			break
+		}
+	}
+	return true
+}
+
 //
 // 节点gRPC part
 //
-
 func (n *Node) TestConnection(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
 	ret := &NodeRPC.BoolResponse{
 		Result: true,
@@ -218,9 +278,16 @@ func (n *Node) ConfirmLeader(ctx context.Context, req *NodeRPC.IDRequest) (*Node
 	return ret, nil
 }
 
+func (n *Node) ConfirmMessage(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	ret := &NodeRPC.BoolResponse{
+		Result: true,
+	}
+	return ret, nil
+}
+
 func (n *Node) ResponseHeartBeat(ctx context.Context, req *NodeRPC.IDRequest) (*NodeRPC.BoolResponse, error) {
 	if req.ID == n.leader {
-		log.Println("接收到来自leader的心跳包")
+		log.Println("接收到来自leader节点" + req.ID + "的心跳包")
 		n.nextHeartBeatTime = getCurrentTime() + int64(heartBeatTimeout)
 		ret := &NodeRPC.BoolResponse{
 			Result: true,
@@ -233,14 +300,28 @@ func (n *Node) ResponseHeartBeat(ctx context.Context, req *NodeRPC.IDRequest) (*
 	return ret, nil
 }
 
-func (n *Node) ReceiveMessage(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+func (n *Node) ReceiveMessageFromLeader(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	log.Println("已收到来自leader的消息ID为" + req.MsgID + "的消息")
+	MessageStore[req.MsgID] = req.Msg
+	ret := &NodeRPC.BoolResponse{
+		Result: true,
+	}
+	return ret, nil
+}
+
+func (n *Node) RedirectMessageToLeader(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
 	ret := &NodeRPC.BoolResponse{
 		Result: false,
 	}
 	return ret, nil
 }
 
-func (n *Node) RedirectMessageToLeader(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+func (n *Node) ReceiveMessageFromClient(ctx context.Context, req *NodeRPC.MessageRequest) (*NodeRPC.BoolResponse, error) {
+	if n.leader == n.id {
+
+	} else {
+
+	}
 	ret := &NodeRPC.BoolResponse{
 		Result: false,
 	}
